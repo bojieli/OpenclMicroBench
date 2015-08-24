@@ -78,5 +78,20 @@ bool CreateCommandHub ( KernelState *state )
             NULL, 
             &status);
     CL_FAIL_CHK(status);
+
+    status = clSetKernelArg(
+            state.Kernel, 
+            0, 
+            sizeof(cl_mem), 
+            &state.ReqQueue);
+    CL_FAIL_CHK(status);
+
+    status = clSetKernelArg(
+            state.Kernel, 
+            1, 
+            sizeof(cl_mem), 
+            &state.CompleteQueue);
+    CL_FAIL_CHK(status);
+
     return true;
 }
