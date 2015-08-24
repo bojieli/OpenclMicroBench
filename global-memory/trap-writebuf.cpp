@@ -1,15 +1,16 @@
 #define CL_FAIL_CHK(x) if ( x != CL_SUCCESS) { printf ("CL operation failed(%x)!\n", x); return false; }
 
 typedef struct {
-	cl_kernel		  Kernel;	
-	cl_command_queue  CmdQueue;
+    cl_kernel		  Kernel;	
+    cl_command_queue  CmdQueue;
 
-	cl_mem            ReqQueue;
-	cl_mem            CompleteQueue;
+    cl_mem            ReqQueue;
+    cl_mem            CompleteQueue;
 } KernelState;
 
+/* This function will NOT work */
 bool SignalKernel ( KernelState *sta, cl_ulong event, cl_ulong* outevent ) { 
-    cl_int status; 
+    cl_int status;
 
     status = clEnqueueWriteBuffer( 
         sta->CmdQueue, 
@@ -25,15 +26,6 @@ bool SignalKernel ( KernelState *sta, cl_ulong event, cl_ulong* outevent ) {
     CL_FAIL_CHK(status); 
     clFinish (sta->CmdQueue); 
 
-    status = clEnqueueTask( 
-        sta->CmdQueue, 
-        sta->Kernel, 
-        0, 
-        NULL, 
-        NULL ); 
-    CL_FAIL_CHK(status); 
-    clFinish ( sta->CmdQueue ); 
-
     status = clEnqueueReadBuffer( 
         sta->CmdQueue, 
         sta->CompleteQueue, 
@@ -47,8 +39,8 @@ bool SignalKernel ( KernelState *sta, cl_ulong event, cl_ulong* outevent ) {
     ); 
     CL_FAIL_CHK(status); 
     clFinish ( sta->CmdQueue ); 
-    return true; 
-} 
+    return true;
+}
 
 bool CreateCommandHub ( KernelState *state )
 {
@@ -95,5 +87,18 @@ bool CreateCommandHub ( KernelState *state )
             &state->CompleteQueue);
     CL_FAIL_CHK(status);
 
+    // launch kernel
+    status = clEnqueueTask( 
+            sta.CmdQueue, 
+            sta.Kernel,
+            0, 
+            NULL, 
+            NULL );
+
+    if (status != CL_SUCCESS) {
+        return false;
+    }
+
+    clFlush ( sta.CmdQueue );
     return true;
 }
